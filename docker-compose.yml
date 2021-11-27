@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: chess-game-frontend
+    volumes:
+      - ./chess-ai:/app
+    ports:
+      - "3000:3000"
+    networks:
+      - default

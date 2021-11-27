@@ -1,0 +1,4 @@
+chess-ai/node_modules
+chess-ai/build
+.dockerignore
+Dockerfile

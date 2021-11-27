@@ -1,4 +1,4 @@
-chess-ai/node_modules
-chess-ai/build
+node_modules
+build
 .dockerignore
 Dockerfile

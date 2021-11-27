@@ -7,7 +7,8 @@ services:
       target: runner
     container_name: chess-game-frontend
     volumes:
-      - ./chess-ai:/app
+      - ./chess-ai/src:/app/src
+      - ./chess-ai/public:/app/public
     ports:
       - "3000:3000"
     networks:

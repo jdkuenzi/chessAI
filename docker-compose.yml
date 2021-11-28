@@ -13,3 +13,17 @@ services:
       - "3000:3000"
     networks:
       - default
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile_backend
+      target: runner
+    container_name: chess-game-backend
+    volumes:
+      - ./backend/app.js:/app/app.js
+      - ./backend/bin:/app/bin
+      - ./backend/routes:/app/routes
+    ports:
+      - "4000:4000"
+    networks:
+      - default

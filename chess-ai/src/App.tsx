@@ -6,70 +6,90 @@ import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import Room from './room/Room';
 import Home from './home/Home';
-import { Route, Routes } from 'react-router-dom';
-import { Socket } from 'socket.io-client';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import { io, Socket } from 'socket.io-client';
 import RouteError from './routeError/RouteError';
 
 type AppProps = {
   playerSocket: Socket
 }
 
-const App: FunctionComponent<AppProps> = ({ playerSocket }) => {
+const App = () => {
+  const app = 'http://localhost:4000'
+  const [playerSocket, setPlayerSocket] = useLocalStorage<Socket>('playerSocket', io(app, { autoConnect: false, transports: ['websocket'], upgrade: true }))
   const [playerName, setPlayerName] = useLocalStorage<string>('playerName', 'Guest')
   const [routeError, setRouteError] = useState<string>('')
   const [playerColor, setPlayerColor] = useState<'white' | 'black'>('white')
   const [roomID, setRoomID] = useState<string>('')
   const [isJoining, setIsJoining] = useState<boolean>(true)
 
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    playerSocket.connect()
+  });
+
+  const handleError = (err:string) => {
+    setRouteError(err)
+    navigate('/error')
+  }
+
   return (
     <div className="App">
-        <header className="App-header">
-          <AppBar position="fixed" color="primary">
-            <Toolbar>
-              <Typography variant="h6">
-                Welcome player {playerName} !
+      <header className="App-header">
+        <AppBar position="fixed" color="primary">
+          <Toolbar>
+            <Typography variant="h6">
+              Welcome player {playerName} !
               {/* 
                 <Link to="">Home</Link>
                 <Link to="room">Room</Link> 
               */}
-              </Typography>
-            </Toolbar>
-          </AppBar>
-        </header>
-        <main className="App-main">
-          <Routes>
-            <Route path="/" element={
-              <Home 
-                playerName={playerName} 
-                roomID={roomID} 
-                playerSocket={playerSocket}
-                setIsJoining={setIsJoining} 
-                setRoomID={setRoomID} 
-                setPlayerColor={setPlayerColor} 
-                setPlayerName={setPlayerName} 
-              />
-            } />
-            <Route path="room/:roomID" element={
-              <Room
-                playerColor={playerColor} 
-                playerSocket={playerSocket} 
-                playerName={playerName}
-                isJoining={isJoining}
-                setRouteError={setRouteError}
-              />
-            } />
-            <Route path="error" element = {
-              <RouteError
-                err={routeError}
-              />
-            } />
-          </Routes>
-        </main>
-        <footer className='App-footer'>
-          <img src={logo} className="" alt="logo" />
-          <div>Copyright &copy; 2021 - Jean-Daniel Küenzi</div>
-        </footer>
-      </div>
+            </Typography>
+          </Toolbar>
+        </AppBar>
+      </header>
+      <main className="App-main">
+        <Routes>
+          <Route path="/" element={
+            <Home
+              playerName={playerName}
+              roomID={roomID}
+              playerSocket={playerSocket}
+              setIsJoining={setIsJoining}
+              setRoomID={setRoomID}
+              setPlayerColor={setPlayerColor}
+              setPlayerName={setPlayerName}
+              handleError={handleError}
+            />
+          } />
+          <Route path="room/:roomID" element={
+            <Room
+              playerColor={playerColor}
+              playerSocket={playerSocket}
+              playerName={playerName}
+              isJoining={isJoining}
+              setPlayerColor={setPlayerColor}
+              handleError={handleError}
+            />
+          } />
+          <Route path="error" element={
+            <RouteError
+              err={routeError}
+            />
+          } />
+          <Route path="*" element={
+            <RouteError
+              err={'Il n\'y a rien à voir ici :('}
+            />
+          } />
+        </Routes>
+      </main>
+      <footer className='App-footer'>
+        <img src={logo} className="" alt="logo" />
+        <div>Copyright &copy; 2021 - Jean-Daniel Küenzi</div>
+      </footer>
+    </div>
   );
 }
 

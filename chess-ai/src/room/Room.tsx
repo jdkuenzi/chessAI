@@ -11,35 +11,49 @@ type RoomProps = {
     playerName: string,
     playerSocket: Socket,
     isJoining: boolean,
-    setRouteError: (err:string) => void
+    setPlayerColor: (color:'white'|'black') => void,
+    handleError: (err:string) => void
 }
 
-const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSocket, playerName, setRouteError }) => {
+type RoomData = {
+    white:string,
+    black:string
+}
+
+type JoiningResponse = {
+    status: number,
+    playerColor?: 'white'|'black',
+    err?:string
+}
+
+const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSocket, playerName, setPlayerColor, handleError }) => {
 
     let location = useLocation();
     const navigate = useNavigate()
 
     const params = useParams()
 
+    const [roomData, setRoomData] = useState<RoomData>({white:'', black:''})
     const [waitingOnPlayer, setWaitingOnPlayer] = useState(true)
 
     const handleClick = () => {
         navigate('/', {replace: false})
     }
 
-    const handleError = (err:string) => {
-        setRouteError(err)
-        navigate('/error')
-    }
-
     useEffect(() => {
-        console.log(params)
         if (isJoining) {
             let data = { roomID: params.roomID, playerName: playerName }
-            playerSocket.emit('joiningRoom', data)
+            playerSocket.emit('joiningRoom', data, (res: JoiningResponse) => {
+                console.log(res)
+                if (res.status === 200) { setPlayerColor(res.playerColor!) }
+                else { handleError(res.err!) }
+            })
         }
-        playerSocket.on('roomJoined', (data) => {
+        playerSocket.on('roomJoined', (data : {msg:string, roomData:RoomData}) => {
             console.log(data)
+            console.log(data.roomData)
+            setRoomData(data.roomData)
+            console.log(roomData)
             setWaitingOnPlayer(false)
         })
         playerSocket.on('userLeaved', (data) => {
@@ -55,7 +69,7 @@ const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSock
             playerSocket.disconnect()
             // Disconnect client's socket
           }
-    }, [location]);
+    }, []);
 
     const roomState = useMemo(() => {
         if (waitingOnPlayer) {
@@ -76,9 +90,14 @@ const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSock
             );
         }
         return (
-            <Suspense fallback={<div>Loading...</div>}>
-                <Board orientation={playerColor} />
-            </Suspense>
+            <>
+                <Typography variant="h6" color="initial">
+                    Your oponent is {(playerColor === 'white')? roomData.black : roomData.white}
+                </Typography>
+                <Suspense fallback={<div>Loading...</div>}>
+                    <Board orientation={playerColor} />
+                </Suspense>
+            </>
         )
     }, [waitingOnPlayer, params, playerColor]);
 

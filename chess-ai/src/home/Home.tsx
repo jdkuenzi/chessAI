@@ -13,27 +13,22 @@ type HomeProps = {
     setIsJoining: (value: boolean) => void,
     setRoomID: (roomID: string) => void,
     setPlayerColor: (color: 'white' | 'black') => void,
-    setPlayerName: (name: string) => void
+    setPlayerName: (name: string) => void,
+    handleError: (err:string) => void
 }
 
-const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, setIsJoining, setRoomID, setPlayerColor, setPlayerName }) => {
+type CreateRoomResponse = {
+    status: number,
+    roomID?: string,
+    err?: string
+}
+
+const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, setIsJoining, setRoomID, setPlayerColor, setPlayerName, handleError }) => {
     const [openColorDialog, setOpenColorDialog] = React.useState(false);
     const [nameError, setNameError] = useState(!(playerName.length > 0))
     const [roomIDError, setRoomIDError] = useState(false)
 
     const navigate = useNavigate();
-
-    useEffect(() => {
-        console.log(playerSocket)
-        playerSocket.on("roomCreated", (data) => {
-            console.log(data)
-            setIsJoining(false)
-            navigate(`room/${data.roomID}`, { replace: false })
-        })
-        playerSocket.on('customError', (data) => {
-            console.log(data)
-        })
-    });
 
     const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let name = event.target.value.trim()
@@ -59,7 +54,15 @@ const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, 
             setOpenColorDialog(false)
             setPlayerColor(color)
             let data = (color === 'white')? {white:playerName, black:''} : {white:'', black:playerName} 
-            playerSocket.emit('creatingRoom', data)
+            playerSocket.emit('creatingRoom', data, (res: CreateRoomResponse) => {
+                if (res.status === 200) { 
+                    setIsJoining(false)
+                    navigate(`/room/${res.roomID!}`, { replace: false })
+                }
+                else {
+                    handleError(res.err!)
+                }
+            })
         },
         [setOpenColorDialog, setPlayerColor, playerName, playerSocket],
     )
@@ -80,8 +83,9 @@ const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, 
         if (nameError) {
             return;
         }
-        navigate(`room/${roomID}`, { replace: false })
         console.log(`joining room ${roomID}...`)
+        setIsJoining(true)
+        navigate(`/room/${roomID}`, { replace: false })
     }
 
     const nameHelperText = useMemo(() => {

@@ -6,13 +6,10 @@ import reportWebVitals from './reportWebVitals';
 import { io } from 'socket.io-client';
 import { BrowserRouter } from 'react-router-dom';
 
-const app = 'http://localhost:4000'
-const playerSocket = io(app, {autoConnect: true, transports: ['websocket'], upgrade: true})
-
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
-      <App playerSocket={playerSocket} />
+      <App />
     </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')

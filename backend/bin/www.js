@@ -35,40 +35,53 @@ app.set('roomsData', roomsData);
 
 io.on('connection', socket => {
     console.log('new connection : ' + socket.id)
-    socket.on('creatingRoom', (data) => {
+    socket.on('creatingRoom', (data, callback) => {
         try {
             let roomID = uuidv4()
             while (Object.keys(roomsData).includes(roomID)) {
                 roomID = uuidv4()
             }
             roomsData[roomID] = data // data = { white:playerName, black:'' }
-            console.log(roomsData)
             socket.join(roomID);
-            socket.emit('roomCreated', { msg: 'La salle à été créée', roomID: roomID });
+            // socket.emit('roomCreated', { msg: 'La salle à été créée', roomID: roomID });
+            callback({
+                status: 200,
+                roomID: roomID
+            })
         } catch (err) {
-            socket.emit('customError', { msg: 'La salle n\a pas pu être créée Error => ' + err });
+            // socket.emit('customError', { msg: 'La salle n\a pas pu être créée Error => ' + err });
+            callback({
+                status: 500,
+                err: err
+            })
         }
     });
 
-    socket.on('joiningRoom', (data) => {
-        console.log(roomsData)
-        console.log(data.roomID.toString())
-        var nbClient = numClientsInRoom(data.roomID.toString());
+    socket.on('joiningRoom', (data, callback) => {
+        var nbClient = numClientsInRoom(data.roomID);
         if (nbClient !== undefined && nbClient < 2) {
             let roomData = roomsData[data.roomID]
             if (roomData.white === '') { roomData.white = data.playerName }
             else { roomData.black = data.playerName }
             socket.join(data.roomID);
+            console.log(io.sockets.adapter.rooms)
             io.to(data.roomID).emit('roomJoined', { msg: 'Un joueur a rejoin la salle', roomData: roomData });
+            callback({
+                status: 200,
+                playerColor: (roomData.white === data.playerName)? 'white' : 'black'
+            })
         } else {
+            callback({
+                status: 500,
+                err: 'La salle n\'existe pas ou est pleine (max 2 joueurs) !'
+            })
             console.log('join error')
-            socket.emit('customError', { msg: 'La salle n\'existe pas ou est pleine (max 2 joueurs) !' });
+            // socket.emit('customError', { msg: 'La salle n\'existe pas ou est pleine (max 2 joueurs) !' });
         }
     });
 
     socket.on('disconnecting', () => {
         const roomsID = socket.rooms;
-        console.log(roomsID)
         roomsID.forEach(roomID => {
             console.log(socket.id + ' is leaving ' + roomID )
             socket.leave(roomID);

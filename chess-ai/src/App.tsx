@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import logo from './logo.svg'
 import './App.css';
 import AppBar from '@mui/material/AppBar'
@@ -9,10 +9,6 @@ import Home from './home/Home';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import RouteError from './routeError/RouteError';
-
-type AppProps = {
-  playerSocket: Socket
-}
 
 const App = () => {
   const app = 'http://localhost:4000'
@@ -25,9 +21,24 @@ const App = () => {
 
   const navigate = useNavigate()
 
-  useEffect(() => {
-    playerSocket.connect()
-  });
+  const handlePlayerConnection = useCallback(
+    (room:string) => {
+    if (playerSocket.disconnected) {
+      console.log('------------------------------------')
+      console.log('i\'m connecting in ' + room)
+      playerSocket.connect()
+      console.log(playerSocket)
+      console.log('------------------------------------')
+    }
+  },[playerSocket])
+
+  const handlePlayerDisconnection = useCallback(
+    (room:string) => {
+      console.log('------------------------------------')
+      console.log('i\'m disconnecting in ' + room)
+      playerSocket.disconnect()
+      console.log('------------------------------------')
+  },[playerSocket])
 
   const handleError = (err:string) => {
     setRouteError(err)
@@ -41,10 +52,6 @@ const App = () => {
           <Toolbar>
             <Typography variant="h6">
               Welcome player {playerName} !
-              {/* 
-                <Link to="">Home</Link>
-                <Link to="room">Room</Link> 
-              */}
             </Typography>
           </Toolbar>
         </AppBar>
@@ -61,6 +68,7 @@ const App = () => {
               setPlayerColor={setPlayerColor}
               setPlayerName={setPlayerName}
               handleError={handleError}
+              handlePlayerConnection={handlePlayerConnection}
             />
           } />
           <Route path="room/:roomID" element={
@@ -70,6 +78,9 @@ const App = () => {
               playerName={playerName}
               isJoining={isJoining}
               setPlayerColor={setPlayerColor}
+              setIsJoining={setIsJoining}
+              handlePlayerConnection={handlePlayerConnection}
+              handlePlayerDisconnection={handlePlayerDisconnection}
               handleError={handleError}
             />
           } />
@@ -80,7 +91,7 @@ const App = () => {
           } />
           <Route path="*" element={
             <RouteError
-              err={'Il n\'y a rien à voir ici :('}
+              err={'Il n\'y a rien à voir ici :/ 404'}
             />
           } />
         </Routes>

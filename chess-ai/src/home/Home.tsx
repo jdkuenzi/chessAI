@@ -14,6 +14,7 @@ type HomeProps = {
     setRoomID: (roomID: string) => void,
     setPlayerColor: (color: 'white' | 'black') => void,
     setPlayerName: (name: string) => void,
+    handlePlayerConnection: (room:string) => void,
     handleError: (err:string) => void
 }
 
@@ -23,12 +24,16 @@ type CreateRoomResponse = {
     err?: string
 }
 
-const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, setIsJoining, setRoomID, setPlayerColor, setPlayerName, handleError }) => {
+const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, setIsJoining, setRoomID, setPlayerColor, setPlayerName, handleError, handlePlayerConnection }) => {
     const [openColorDialog, setOpenColorDialog] = React.useState(false);
     const [nameError, setNameError] = useState(!(playerName.length > 0))
     const [roomIDError, setRoomIDError] = useState(false)
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        handlePlayerConnection('Home.tsx')
+      }, [handlePlayerConnection]);
 
     const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let name = event.target.value.trim()
@@ -64,7 +69,7 @@ const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, 
                 }
             })
         },
-        [setOpenColorDialog, setPlayerColor, playerName, playerSocket],
+        [setOpenColorDialog, setPlayerColor, setIsJoining, navigate, handleError, playerName, playerSocket],
     )
 
     const handleCreateRoom = () => {

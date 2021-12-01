@@ -1,8 +1,7 @@
-import React, { FunctionComponent, Suspense, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Socket } from "socket.io-client";
+import { FunctionComponent } from "react";
+import {useNavigate } from "react-router-dom";
 import Typography from '@mui/material/Typography'
-import { LinearProgress, Stack, Button } from "@mui/material";
+import { Button } from "@mui/material";
 
 type RouteErrorProps = {
     err: string

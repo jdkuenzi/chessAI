@@ -61,6 +61,7 @@ io.on('connection', socket => {
         var nbClient = numClientsInRoom(data.roomID);
         if (nbClient !== undefined && nbClient < 2) {
             let roomData = roomsData[data.roomID]
+            console.log(roomData)
             if (roomData.white === '') { roomData.white = data.playerName }
             else { roomData.black = data.playerName }
             socket.join(data.roomID);
@@ -84,9 +85,9 @@ io.on('connection', socket => {
         const roomsID = socket.rooms;
         roomsID.forEach(roomID => {
             console.log(socket.id + ' is leaving ' + roomID )
+            io.to(roomID).emit('userLeaved', { msg: 'Votre adversaire a quitté la salle' });
             socket.leave(roomID);
             delete roomsData[roomID];
-            io.to(roomID).emit('userLeaved', { msg: 'Votre adversaire a quitté la salle' });
         });
     });
 })
@@ -117,9 +118,8 @@ function normalizePort(val) {
  * @returns undefined if room doesn't exist | number of client in the room
  */
 function numClientsInRoom(roomID) {
-    // console.log(io.sockets.adapter.rooms)
+    console.log(io.sockets.adapter.rooms)
     var clients = io.sockets.adapter.rooms.get(roomID);
-    console.log(clients)
     return (clients)? clients.size : undefined
 }
 

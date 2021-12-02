@@ -64,6 +64,7 @@ io.on('connection', socket => {
             console.log(roomData)
             if (roomData.white === '') { roomData.white = data.playerName }
             else { roomData.black = data.playerName }
+            roomsData[data.roomID] = roomData
             socket.join(data.roomID);
             console.log(io.sockets.adapter.rooms)
             io.to(data.roomID).emit('roomJoined', { msg: 'Un joueur a rejoin la salle', roomData: roomData });
@@ -80,6 +81,20 @@ io.on('connection', socket => {
             // socket.emit('customError', { msg: 'La salle n\'existe pas ou est pleine (max 2 joueurs) !' });
         }
     });
+
+    socket.on('validMove', (data, callback) => {
+        try {
+            socket.to(data.roomID).emit('oponentMove', {fen:data.fen})
+            callback({
+                status:200
+            })
+        } catch (err) {
+            callback({
+                status:500
+            })
+        }
+
+    })
 
     socket.on('disconnecting', () => {
         const roomsID = socket.rooms;

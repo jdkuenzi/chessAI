@@ -9,14 +9,14 @@ import Home from './home/Home';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import RouteError from './routeError/RouteError';
+import { PlayerColor } from './types/global'
 
 const App = () => {
   const app = 'http://localhost:4000'
   const [playerSocket, setPlayerSocket] = useLocalStorage<Socket>('playerSocket', io(app, { autoConnect: false, transports: ['websocket'], upgrade: true }))
   const [playerName, setPlayerName] = useLocalStorage<string>('playerName', 'Guest')
   const [routeError, setRouteError] = useState<string>('')
-  const [playerColor, setPlayerColor] = useState<'white' | 'black'>('white')
-  const [roomID, setRoomID] = useState<string>('')
+  const [playerColor, setPlayerColor] = useState<PlayerColor>('white')
   const [isJoining, setIsJoining] = useState<boolean>(true)
 
   const navigate = useNavigate()
@@ -42,7 +42,7 @@ const App = () => {
 
   const handleError = (err:string) => {
     setRouteError(err)
-    navigate('/error')
+    navigate('/error', {replace: true})
   }
 
   return (
@@ -61,10 +61,8 @@ const App = () => {
           <Route path="/" element={
             <Home
               playerName={playerName}
-              roomID={roomID}
               playerSocket={playerSocket}
               setIsJoining={setIsJoining}
-              setRoomID={setRoomID}
               setPlayerColor={setPlayerColor}
               setPlayerName={setPlayerName}
               handleError={handleError}

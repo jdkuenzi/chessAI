@@ -7,3 +7,5 @@ export type ServerToClientEvents = {
 export type ClientToServerEvents = {
     hello: () => void;
 }
+
+export type PlayerColor = 'white' | 'black'

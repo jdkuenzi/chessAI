@@ -4,30 +4,14 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { SvgIcon, SvgIconProps } from '@mui/material';
-import {ReactComponent as KingFillSVG} from './assets/king-fill.svg';
-import {ReactComponent as KingOutlineSVG} from './assets/king-outline.svg';
+import KingFillIcon from '../assets/king-fill'
+import KingOutlineIcon from '../assets/king-outline';
+import { PlayerColor } from '../types/global'
 
 type ColorDialogProps = {
     open: boolean,
-    onSelectColor: (color:'white' | 'black') => void,
+    onSelectColor: (color:PlayerColor) => void,
     onClose: () => void
-}
-
-function KingFillIcon(props: SvgIconProps) {
-    return (
-        <SvgIcon {...props}>
-            <KingFillSVG />
-        </SvgIcon>
-    )
-}
-
-function KingOutlineIcon(props: SvgIconProps) {
-    return (
-        <SvgIcon {...props}>
-            <KingOutlineSVG />
-        </SvgIcon>
-    )
 }
 
 const ColorDialog: FunctionComponent<ColorDialogProps> = ({ open, onSelectColor, onClose }) => {

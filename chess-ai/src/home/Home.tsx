@@ -5,14 +5,13 @@ import React, { useState, useMemo, FunctionComponent, useCallback, useEffect } f
 import { useNavigate } from "react-router-dom";
 import ColorDialog from './ColorDialog';
 import { Socket } from 'socket.io-client';
+import { PlayerColor } from '../types/global'
 
 type HomeProps = {
     playerName: string,
-    roomID: string,
     playerSocket: Socket,
     setIsJoining: (value: boolean) => void,
-    setRoomID: (roomID: string) => void,
-    setPlayerColor: (color: 'white' | 'black') => void,
+    setPlayerColor: (color: PlayerColor) => void,
     setPlayerName: (name: string) => void,
     handlePlayerConnection: (room:string) => void,
     handleError: (err:string) => void
@@ -24,7 +23,8 @@ type CreateRoomResponse = {
     err?: string
 }
 
-const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, setIsJoining, setRoomID, setPlayerColor, setPlayerName, handleError, handlePlayerConnection }) => {
+const Home: FunctionComponent<HomeProps> = ({ playerName, playerSocket, setIsJoining, setPlayerColor, setPlayerName, handleError, handlePlayerConnection }) => {
+    const [roomID, setRoomID] = useState<string>('')
     const [openColorDialog, setOpenColorDialog] = React.useState(false);
     const [nameError, setNameError] = useState(!(playerName.length > 0))
     const [roomIDError, setRoomIDError] = useState(false)
@@ -55,14 +55,14 @@ const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, 
     )
 
     const handleColorDialogSelect = useCallback(
-        (color: 'white' | 'black') => {
+        (color: PlayerColor) => {
             setOpenColorDialog(false)
             setPlayerColor(color)
             let data = (color === 'white')? {white:playerName, black:''} : {white:'', black:playerName} 
             playerSocket.emit('creatingRoom', data, (res: CreateRoomResponse) => {
                 if (res.status === 200) { 
                     setIsJoining(false)
-                    navigate(`/room/${res.roomID!}`, { replace: false })
+                    navigate(`/room/${res.roomID!}`, { replace: true })
                 }
                 else {
                     handleError(res.err!)
@@ -90,7 +90,7 @@ const Home: FunctionComponent<HomeProps> = ({ playerName, roomID, playerSocket, 
         }
         console.log(`joining room ${roomID}...`)
         setIsJoining(true)
-        navigate(`/room/${roomID}`, { replace: false })
+        navigate(`/room/${roomID}`, { replace: true })
     }
 
     const nameHelperText = useMemo(() => {

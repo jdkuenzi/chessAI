@@ -61,16 +61,26 @@ io.on('connection', socket => {
         var nbClient = numClientsInRoom(data.roomID);
         if (nbClient !== undefined && nbClient < 2) {
             let roomData = roomsData[data.roomID]
+            let oponentName = ''
+            let playerColor = true // true -> white, false -> black
             console.log(roomData)
-            if (roomData.white === '') { roomData.white = data.playerName }
-            else { roomData.black = data.playerName }
+            if (roomData.white === '') { 
+                roomData.white = data.playerName
+                oponentName = roomData.black
+            }
+            else { 
+                roomData.black = data.playerName
+                oponentName = roomData.white
+                playerColor = !playerColor
+            }
             roomsData[data.roomID] = roomData
             socket.join(data.roomID);
             console.log(io.sockets.adapter.rooms)
-            io.to(data.roomID).emit('roomJoined', { msg: 'Un joueur a rejoin la salle', roomData: roomData });
+            socket.to(data.roomID).emit('roomJoined', { msg: 'Un joueur a rejoin la salle', oponentName: data.playerName });
             callback({
                 status: 200,
-                playerColor: (roomData.white === data.playerName)? 'white' : 'black'
+                playerColor: playerColor,
+                oponentName: oponentName
             })
         } else {
             callback({

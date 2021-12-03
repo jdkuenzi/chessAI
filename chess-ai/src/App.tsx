@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import logo from './logo.svg'
 import './App.css';
 import AppBar from '@mui/material/AppBar'
@@ -7,16 +7,39 @@ import Typography from '@mui/material/Typography'
 import Room from './room/Room';
 import Home from './home/Home';
 import { Route, Routes, useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import RouteError from './routeError/RouteError';
-import { PlayerColor } from './types/global'
+import { ThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/styles';
+import { IconButton, PaletteMode } from '@mui/material';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 const App = () => {
-  const app = 'http://localhost:4000'
-  const [playerSocket, setPlayerSocket] = useLocalStorage<Socket>('playerSocket', io(app, { autoConnect: false, transports: ['websocket'], upgrade: true }))
+  const app = 'http://192.168.1.14:4000'
+  const playerSocket = useMemo(() => io(app, { autoConnect: false, transports: ['websocket'], upgrade: true }), [])
+  const [mode, setMode] = useLocalStorage<PaletteMode>('mode', 'light')
+  const theme = useMemo(
+    () => responsiveFontSizes(
+      createTheme(
+        {
+          breakpoints: {
+            values: {
+              xs: 0,
+              sm: 600,
+              md: 900,
+              lg: 1200,
+              xl: 1536,
+            },
+          },
+          palette: {
+            mode: mode
+          }
+        }
+      )
+    ), [mode])
   const [playerName, setPlayerName] = useLocalStorage<string>('playerName', 'Guest')
   const [routeError, setRouteError] = useState<string>('')
-  const [playerColor, setPlayerColor] = useState<PlayerColor>('white')
+  const [playerColor, setPlayerColor] = useState<boolean>(true)
   const [isJoining, setIsJoining] = useState<boolean>(true)
 
   const navigate = useNavigate()
@@ -46,12 +69,19 @@ const App = () => {
   }
 
   return (
+    <ThemeProvider theme={theme}>
     <div className="App">
       <header className="App-header">
         <AppBar position="fixed" color="primary">
           <Toolbar>
             <Typography variant="h6">
               Welcome player {playerName} !
+            </Typography>
+            <Typography variant="body1" alignItems='center' justifyContent='center'>
+              {theme.palette.mode} mode
+              <IconButton onClick={() => setMode((mode === 'light')? 'dark' : 'light' )} color="inherit">
+                {(theme.palette.mode === 'dark')? <Brightness7Icon /> : <Brightness4Icon />}
+              </IconButton>
             </Typography>
           </Toolbar>
         </AppBar>
@@ -99,6 +129,7 @@ const App = () => {
         <div>Copyright &copy; 2021 - Jean-Daniel Küenzi</div>
       </footer>
     </div>
+    </ThemeProvider>
   );
 }
 

@@ -3,30 +3,25 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Socket } from "socket.io-client";
 import Typography from '@mui/material/Typography'
 import { LinearProgress, Stack, Button, Tooltip } from "@mui/material";
-import { PlayerColor } from '../types/global'
 
 const Game = React.lazy(() => import('./Game'));
 
 type RoomProps = {
-    playerColor: "white" | "black",
+    playerColor: boolean,
     playerName: string,
     playerSocket: Socket,
     isJoining: boolean,
-    setPlayerColor: (color: PlayerColor) => void,
+    setPlayerColor: (color: boolean) => void,
     setIsJoining: (value: boolean) => void,
     handlePlayerConnection: (room: string) => void,
     handlePlayerDisconnection: (room: string) => void,
     handleError: (err: string) => void
 }
 
-type RoomData = {
-    white: string,
-    black: string
-}
-
 type JoiningResponse = {
     status: number,
-    playerColor?: PlayerColor,
+    playerColor?: boolean,
+    oponentName?: string,
     err?: string
 }
 
@@ -37,7 +32,7 @@ const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSock
     const params = useParams()
     const [roomID, setRoomID] = useState<string>('')
     const [tooltipText, setTooltipText] = useState<string>('Copy to clip-board')
-    const [roomData, setRoomData] = useState<RoomData>({ white: '', black: '' })
+    const [oponentName, setOponentName] = useState<string>('')
     const [waitingOnPlayer, setWaitingOnPlayer] = useState(true)
 
     const handleGoBack = () => {
@@ -69,6 +64,8 @@ const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSock
                     console.log('joining okay !')
                     setIsJoining(false)
                     setPlayerColor(res.playerColor!)
+                    setOponentName(res.oponentName!)
+                    setWaitingOnPlayer(false)
                 }
                 else { handleError(res.err!) }
             })
@@ -76,9 +73,9 @@ const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSock
     }, [setPlayerColor, setIsJoining, handleError, roomID, playerName, playerSocket, isJoining])
 
     useEffect(() => {
-        playerSocket.on('roomJoined', (data: { msg: string, roomData: RoomData }) => {
+        playerSocket.on('roomJoined', (data: { msg: string, oponentName: string }) => {
             console.log(data)
-            setRoomData(data.roomData)
+            setOponentName(data.oponentName)
             setWaitingOnPlayer(false)
         })
         playerSocket.on('userLeaved', (data) => {
@@ -89,7 +86,7 @@ const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSock
             console.log(data)
             handleError(data.msg)
         })
-    }, [handleError, playerSocket]);
+    }, [handleError, playerSocket, playerColor]);
 
     const roomState = useMemo(() => {
         if (waitingOnPlayer) {
@@ -125,20 +122,15 @@ const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSock
             );
         }
         return (
-            <>
-                <Typography variant="h6" color="initial">
-                    Your oponent is {(playerColor === 'white') ? roomData.black : roomData.white}
-                    {console.log(roomData)}
-                </Typography>
-                <Suspense fallback={<div>Loading...</div>}>
-                    <Game playerColor={playerColor} playerSocket={playerSocket} roomID={roomID}/>
-                </Suspense>
-            </>
+            <Suspense fallback={<div>Loading...</div>}>
+                <Game playerColor={playerColor} playerSocket={playerSocket} roomID={roomID} oponentName={oponentName}/>
+            </Suspense>
         )
-    }, [waitingOnPlayer, roomID, playerColor, playerSocket, roomData, tooltipText]);
+    }, [waitingOnPlayer, roomID, playerColor, playerSocket, oponentName, tooltipText]);
 
     return (
         <>
+
             <Button onClick={handleGoBack} variant="text" color="primary">
                 {'< Go back'}
             </Button>

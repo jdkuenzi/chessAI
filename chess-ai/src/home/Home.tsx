@@ -1,17 +1,16 @@
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import { FormControl, FormHelperText, Input, InputLabel, TextField, InputAdornment } from '@mui/material';
-import React, { useState, useMemo, FunctionComponent, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, FunctionComponent, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import ColorDialog from './ColorDialog';
 import { Socket } from 'socket.io-client';
-import { PlayerColor } from '../types/global'
 
 type HomeProps = {
     playerName: string,
     playerSocket: Socket,
     setIsJoining: (value: boolean) => void,
-    setPlayerColor: (color: PlayerColor) => void,
+    setPlayerColor: (color: boolean) => void,
     setPlayerName: (name: string) => void,
     handlePlayerConnection: (room:string) => void,
     handleError: (err:string) => void
@@ -47,18 +46,14 @@ const Home: FunctionComponent<HomeProps> = ({ playerName, playerSocket, setIsJoi
         setRoomIDError(false)
     }
 
-    const handleColorDialogClose = useCallback(
-        () => {
+    const handleColorDialogClose = () => {
             setOpenColorDialog(false)
-        },
-        [setOpenColorDialog],
-    )
-
-    const handleColorDialogSelect = useCallback(
-        (color: PlayerColor) => {
+    }
+    
+    const handleColorDialogSelect = (color:boolean) => {
             setOpenColorDialog(false)
             setPlayerColor(color)
-            let data = (color === 'white')? {white:playerName, black:''} : {white:'', black:playerName} 
+            let data = (color)? {white:playerName, black:''} : {white:'', black:playerName} 
             playerSocket.emit('creatingRoom', data, (res: CreateRoomResponse) => {
                 if (res.status === 200) { 
                     setIsJoining(false)
@@ -68,9 +63,7 @@ const Home: FunctionComponent<HomeProps> = ({ playerName, playerSocket, setIsJoi
                     handleError(res.err!)
                 }
             })
-        },
-        [setOpenColorDialog, setPlayerColor, setIsJoining, navigate, handleError, playerName, playerSocket],
-    )
+    }
 
     const handleCreateRoom = () => {
         if (nameError) {

@@ -130,7 +130,6 @@ const Room: FunctionComponent<RoomProps> = ({ isJoining, playerColor, playerSock
 
     return (
         <>
-
             <Button onClick={handleGoBack} variant="text" color="primary">
                 {'< Go back'}
             </Button>

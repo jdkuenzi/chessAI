@@ -40,6 +40,7 @@ const Game: FunctionComponent<GameProps> = ({ playerColor, playerSocket, roomID,
   const [isWhiteTurn, setIsWhiteTurn] = useState<boolean>(true)
   const itsMyTurn = useMemo<boolean>(() => (playerColor === isWhiteTurn) ? true : false, [isWhiteTurn, playerColor])
   const [isInCheck, setIsInCheck] = useState<boolean>(false)
+  const [isInCheckMate, setIsInCheckMate] = useState<boolean>(false)
   const [position, setPosition] = useState<string>(chessGame.fen())
   const [validMoves, setValidMoves] = useState<Move[]>([])
 
@@ -57,8 +58,8 @@ const Game: FunctionComponent<GameProps> = ({ playerColor, playerSocket, roomID,
   }
 
   const getKingSquare = useMemo(() => {
-    console.log('je recalcule getkingsquare');
-    if (isInCheck && itsMyTurn) {
+    if (itsMyTurn && (isInCheck || isInCheckMate)) {
+      console.log('je recalcule getkingsquare');
       let board: Board = chessGame.board()
       let color = (playerColor) ? 'w' : 'b'
       for (let row = 0; row < board.length; row++) {
@@ -78,16 +79,37 @@ const Game: FunctionComponent<GameProps> = ({ playerColor, playerSocket, roomID,
       }
     }
     return ''
-  }, [chessGame, playerColor, isInCheck, itsMyTurn])
+  }, [chessGame, playerColor, itsMyTurn, isInCheck, isInCheckMate])
 
   const squareStyles = useMemo(() => {
     console.log('je recalcule squareStyles')
     let temp = validMoves.reduce(
       (a, x) => {
-        if (x.flags === chessGame.FLAGS.CAPTURE) {
-          return { ...a, [x.to]: { backgroundColor: "rgba(255, 0, 0, 0.25)" } }
+        if (x.san.includes('+')) {
+          return { 
+            ...a, 
+            [x.to]: { backgroundColor: "rgba(255, 165, 0, 0.75)" }
+          }
+        } else if (x.san.includes('#')) {
+          return { 
+            ...a, 
+            [x.to]: { backgroundColor: "rgba(255, 0, 0, 1)" } 
+          }
+        } else if (x.flags === "np") {
+          return { 
+            ...a, 
+            [x.to]: { backgroundColor: "rgba(165, 55, 253, 0.25)" } 
+          }
+        }else if (x.flags === chessGame.FLAGS.CAPTURE) {
+          return { 
+            ...a, 
+            [x.to]: { backgroundColor: "rgba(255, 0, 0, 0.25)" } 
+          }
         } else {
-          return { ...a, [x.to]: { backgroundColor: "rgba(0, 255, 0, 0.25)" } }
+          return { 
+            ...a, 
+            [x.to]: { backgroundColor: "rgba(0, 255, 0, 0.25)" } 
+          }
         }
       },
       {}
@@ -95,13 +117,10 @@ const Game: FunctionComponent<GameProps> = ({ playerColor, playerSocket, roomID,
 
     if (getKingSquare !== '') {
       console.log('case de votre roi : ' + getKingSquare)
-      temp = {
-        ...temp,
-        [getKingSquare]: { backgroundColor: "rgba(255, 165, 0, 0.75)" }
-      }
+      temp = (isInCheckMate)? {...temp, [getKingSquare]: { backgroundColor: "rgba(255, 0, 0, 1)" } } : {...temp, [getKingSquare]: { backgroundColor: "rgba(255, 165, 0, 0.75)" } }
     }
     return temp
-  }, [validMoves, chessGame, getKingSquare])
+  }, [validMoves, chessGame, getKingSquare, isInCheckMate])
 
   useEffect(() => {
     playerSocket.on('oponentMove', (data: { fen: string }) => {
@@ -117,6 +136,7 @@ const Game: FunctionComponent<GameProps> = ({ playerColor, playerSocket, roomID,
     console.log('in_check :' + chessGame.in_check());
     console.log('in_checkmate :' + chessGame.in_checkmate())
     setIsInCheck(chessGame.in_check())
+    setIsInCheckMate(chessGame.in_checkmate())
     chessGame.in_draw()
     chessGame.insufficient_material()
     setIsWhiteTurn(chessGame.turn() === 'w')
@@ -159,10 +179,6 @@ const Game: FunctionComponent<GameProps> = ({ playerColor, playerSocket, roomID,
     // console.log('-------------------------');
   }
 
-  const allowDrag = () => {
-    return itsMyTurn
-  }
-
   const boardHeader = useMemo(() => {
     return (
       <>
@@ -182,7 +198,7 @@ const Game: FunctionComponent<GameProps> = ({ playerColor, playerSocket, roomID,
       {boardHeader}
       <Chessboard
         squareStyles={squareStyles}
-        allowDrag={allowDrag}
+        allowDrag={() => itsMyTurn}
         onDrop={onDrop}
         onMouseOverSquare={onMouseOverSquare}
         id="myBoard"

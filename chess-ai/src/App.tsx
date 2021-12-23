@@ -9,10 +9,10 @@ import Home from './home/Home';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import RouteError from './routeError/RouteError';
-import { ThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/styles';
-import { IconButton, PaletteMode } from '@mui/material';
+import { IconButton, PaletteMode, ThemeProvider, createTheme, responsiveFontSizes, Theme, createStyles, CssBaseline } from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { lightBlue, lightGreen, pink } from '@mui/material/colors';
 
 const App = () => {
   const app = 'http://192.168.1.14:4000'
@@ -45,90 +45,91 @@ const App = () => {
   const navigate = useNavigate()
 
   const handlePlayerConnection = useCallback(
-    (room:string) => {
-    if (playerSocket.disconnected) {
-      console.log('------------------------------------')
-      console.log('i\'m connecting in ' + room)
-      playerSocket.connect()
-      console.log(playerSocket)
-      console.log('------------------------------------')
-    }
-  },[playerSocket])
+    (room: string) => {
+      if (playerSocket.disconnected) {
+        console.log('------------------------------------')
+        console.log('i\'m connecting in ' + room)
+        playerSocket.connect()
+        console.log(playerSocket)
+        console.log('------------------------------------')
+      }
+    }, [playerSocket])
 
   const handlePlayerDisconnection = useCallback(
-    (room:string) => {
+    (room: string) => {
       console.log('------------------------------------')
       console.log('i\'m disconnecting in ' + room)
       playerSocket.disconnect()
       console.log('------------------------------------')
-  },[playerSocket])
+    }, [playerSocket])
 
-  const handleError = (err:string) => {
+  const handleError = (err: string) => {
     setRouteError(err)
-    navigate('/error', {replace: true})
+    navigate('/error', { replace: true })
   }
 
   return (
     <ThemeProvider theme={theme}>
-    <div className="App">
-      <header className="App-header">
-        <AppBar position="fixed" color="primary">
-          <Toolbar>
-            <Typography variant="h6">
-              Welcome player {playerName} !
-            </Typography>
-            <Typography variant="body1" alignItems='center' justifyContent='center'>
-              {theme.palette.mode} mode
-              <IconButton onClick={() => setMode((mode === 'light')? 'dark' : 'light' )} color="inherit">
-                {(theme.palette.mode === 'dark')? <Brightness7Icon /> : <Brightness4Icon />}
-              </IconButton>
-            </Typography>
-          </Toolbar>
-        </AppBar>
-      </header>
-      <main className="App-main">
-        <Routes>
-          <Route path="/" element={
-            <Home
-              playerName={playerName}
-              playerSocket={playerSocket}
-              setIsJoining={setIsJoining}
-              setPlayerColor={setPlayerColor}
-              setPlayerName={setPlayerName}
-              handleError={handleError}
-              handlePlayerConnection={handlePlayerConnection}
-            />
-          } />
-          <Route path="room/:roomID" element={
-            <Room
-              playerColor={playerColor}
-              playerSocket={playerSocket}
-              playerName={playerName}
-              isJoining={isJoining}
-              setPlayerColor={setPlayerColor}
-              setIsJoining={setIsJoining}
-              handlePlayerConnection={handlePlayerConnection}
-              handlePlayerDisconnection={handlePlayerDisconnection}
-              handleError={handleError}
-            />
-          } />
-          <Route path="error" element={
-            <RouteError
-              err={routeError}
-            />
-          } />
-          <Route path="*" element={
-            <RouteError
-              err={'Il n\'y a rien à voir ici :/ 404'}
-            />
-          } />
-        </Routes>
-      </main>
-      <footer className='App-footer'>
-        <img src={logo} className="" alt="logo" />
-        <div>Copyright &copy; 2021 - Jean-Daniel Küenzi</div>
-      </footer>
-    </div>
+      <CssBaseline />
+      <div className="App">
+        <header className="App-header">
+          <AppBar position="fixed" color="primary">
+            <Toolbar>
+              <Typography variant="h6">
+                Welcome player {playerName} !
+              </Typography>
+              <Typography variant="body1" alignItems='center' justifyContent='center'>
+                {theme.palette.mode} mode
+                <IconButton onClick={() => setMode((mode === 'light') ? 'dark' : 'light')} color="inherit">
+                  {(theme.palette.mode === 'dark') ? <Brightness7Icon /> : <Brightness4Icon />}
+                </IconButton>
+              </Typography>
+            </Toolbar>
+          </AppBar>
+        </header>
+        <main className="App-main">
+          <Routes>
+            <Route path="/" element={
+              <Home
+                playerName={playerName}
+                playerSocket={playerSocket}
+                setIsJoining={setIsJoining}
+                setPlayerColor={setPlayerColor}
+                setPlayerName={setPlayerName}
+                handleError={handleError}
+                handlePlayerConnection={handlePlayerConnection}
+              />
+            } />
+            <Route path="room/:roomID" element={
+              <Room
+                playerColor={playerColor}
+                playerSocket={playerSocket}
+                playerName={playerName}
+                isJoining={isJoining}
+                setPlayerColor={setPlayerColor}
+                setIsJoining={setIsJoining}
+                handlePlayerConnection={handlePlayerConnection}
+                handlePlayerDisconnection={handlePlayerDisconnection}
+                handleError={handleError}
+              />
+            } />
+            <Route path="error" element={
+              <RouteError
+                err={routeError}
+              />
+            } />
+            <Route path="*" element={
+              <RouteError
+                err={'Il n\'y a rien à voir ici :/ 404'}
+              />
+            } />
+          </Routes>
+        </main>
+        <footer className='App-footer'>
+          <img src={logo} className="" alt="logo" />
+          <div>Copyright &copy; 2021 - Jean-Daniel Küenzi</div>
+        </footer>
+      </div>
     </ThemeProvider>
   );
 }

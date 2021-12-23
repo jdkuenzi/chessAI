@@ -2,7 +2,7 @@
 
 ChessAI is a little project I've made to learn React and use it with a NodeJS backend and an AI developed in Python. 
 
-This is a multiplayer chess game where you can create room and play with a friend or you can try to defeat my AI.
+This is a multiplayer chess game where you can create room and play with friends or you can try to defeat my AI.
 
 ## Author
 
